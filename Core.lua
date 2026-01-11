@@ -1036,7 +1036,10 @@ function CleveRoids.OnUpdate(self)
         end
     end
 
-    -- CleveRoids.IndexActionBars() -- Removed: causes 100+KB/s memory churn. Action bars are indexed on ACTIONBAR_SLOT_CHANGED event instead.
+    -- Update active actions for all CleveRoids macros (handles mod keys, buffs, combat, etc.)
+    -- This is much more efficient than IndexActionBars() because it only processes slots
+    -- that have CleveRoids macros, not all 120 action bar slots
+    CleveRoids.TestForAllActiveActions()
 end
 
 CleveRoids.Hooks.GameTooltip.SetAction = GameTooltip.SetAction
