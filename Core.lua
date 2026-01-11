@@ -98,7 +98,7 @@ end
 
 function CleveRoids.AddCombatLogEntry(msg, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if string.find(msg, "Your %a+ hits") or string.find(msg, "You cast") then
-        local args = {arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9}  -- Manually handle arguments
+        local args = {arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9}  -- Store varargs without intermediate table in caller
         table.insert(CleveRoids.CombatLog, {msg = msg, args = args})
 
         if table.getn(CleveRoids.CombatLog) > MAX_COMBAT_LOG_ENTRIES then
@@ -1036,7 +1036,7 @@ function CleveRoids.OnUpdate(self)
         end
     end
 
-    CleveRoids.IndexActionBars()
+    -- CleveRoids.IndexActionBars() -- Removed: causes 100+KB/s memory churn. Action bars are indexed on ACTIONBAR_SLOT_CHANGED event instead.
 end
 
 CleveRoids.Hooks.GameTooltip.SetAction = GameTooltip.SetAction
@@ -1418,10 +1418,9 @@ eventFrame:RegisterEvent("CHAT_MSG_COMBAT_SELF_HITS")
 eventFrame:RegisterEvent("CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE")
 eventFrame:RegisterEvent("EVENT_COMBAT_LOG_EVENT") -- Correct combat log event for 1.12.1
 
-eventFrame:SetScript("OnEvent", function(self, event, timestamp, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) 
+eventFrame:SetScript("OnEvent", function(self, event, timestamp, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     if event == "EVENT_COMBAT_LOG_EVENT" then
-        local args = {arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9}
-        CleveRoids.AddCombatLogEntry(timestamp, event, unpack(args)) 
+        CleveRoids.AddCombatLogEntry(timestamp, event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     elseif event == "CHAT_MSG_SPELL_SELF_DAMAGE" or event == "CHAT_MSG_COMBAT_SELF_HITS" or event == "CHAT_MSG_SPELL_PERIODIC_CREATURE_DAMAGE" then
         CleveRoids.AddCombatLogEntry(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     end

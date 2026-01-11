@@ -82,7 +82,8 @@ end
 
 function CleveRoids.splitStringIgnoringQuotes(str, separator)
     local result = {}
-    local temp = ""
+    local chars = {}
+    local charCount = 0
     local insideQuotes = false
     local separators = {}
 
@@ -99,18 +100,23 @@ function CleveRoids.splitStringIgnoringQuotes(str, separator)
 
         if char == "\"" then
             insideQuotes = not insideQuotes
-            temp = temp .. char
+            charCount = charCount + 1
+            chars[charCount] = char
         elseif char == separators[char] and not insideQuotes then
+            local temp = table.concat(chars)
             temp = CleveRoids.Trim(temp)
             if temp ~= "" then table.insert(result, temp) end
-            temp = ""
+            chars = {}
+            charCount = 0
         else
-            temp = temp .. char
+            charCount = charCount + 1
+            chars[charCount] = char
         end
     end
 
     -- Add the last segment if it exists
-    if temp ~= "" then
+    if charCount > 0 then
+        local temp = table.concat(chars)
         temp = CleveRoids.Trim(temp)
         table.insert(result, temp)
     end
