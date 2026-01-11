@@ -570,34 +570,48 @@ CleveRoids.Keywords = {
 
     stance = function(conditionals)
         local i = CleveRoids.GetCurrentShapeshiftIndex()
-        return Or(conditionals.stance, function (v)
-            return (i == tonumber(v))
-        end)
+        local values = conditionals.stance
+        if type(values) ~= "table" then
+            return i == tonumber(values)
+        end
+        for _, v in values do
+            if i == tonumber(v) then return true end
+        end
+        return false
     end,
 
     form = function(conditionals)
         local i = CleveRoids.GetCurrentShapeshiftIndex()
-        return Or(conditionals.form, function (v)
-            return (i == tonumber(v))
-        end)
+        local values = conditionals.form
+        if type(values) ~= "table" then
+            return i == tonumber(values)
+        end
+        for _, v in values do
+            if i == tonumber(v) then return true end
+        end
+        return false
     end,
 
     mod = function(conditionals)
-        if type(conditionals.mod) ~= "table" then
+        local values = conditionals.mod
+        if type(values) ~= "table" then
             return CleveRoids.kmods.mod()
         end
-        return Or(conditionals.mod, function(mod)
-            return CleveRoids.kmods[mod]()
-        end)
+        for _, v in values do
+            if CleveRoids.kmods[v] and CleveRoids.kmods[v]() then return true end
+        end
+        return false
     end,
 
     nomod = function(conditionals)
-        if type(conditionals.nomod) ~= "table" then
+        local values = conditionals.nomod
+        if type(values) ~= "table" then
             return CleveRoids.kmods.nomod()
         end
-        return And(conditionals.nomod, function(mod)
-            return not CleveRoids.kmods[mod]()
-        end)
+        for _, v in values do
+            if CleveRoids.kmods[v] and CleveRoids.kmods[v]() then return false end
+        end
+        return true
     end,
 
     target = function(conditionals)
@@ -627,45 +641,75 @@ CleveRoids.Keywords = {
     end,
 
     casting = function(conditionals)
-        if type(conditionals.casting) ~= "table" then return CleveRoids.CheckSpellCast(conditionals.target, "") end
-        return Or(conditionals.casting, function (spell)
-            return CleveRoids.CheckSpellCast(conditionals.target, spell)
-        end)
+        local values = conditionals.casting
+        local target = conditionals.target
+        if type(values) ~= "table" then
+            return CleveRoids.CheckSpellCast(target, "")
+        end
+        for _, v in values do
+            if CleveRoids.CheckSpellCast(target, v) then return true end
+        end
+        return false
     end,
 
     nocasting = function(conditionals)
-        if type(conditionals.nocasting) ~= "table" then return CleveRoids.CheckSpellCast(conditionals.target, "") end
-        return And(conditionals.nocasting, function (spell)
-            return not CleveRoids.CheckSpellCast(conditionals.target, spell)
-        end)
+        local values = conditionals.nocasting
+        local target = conditionals.target
+        if type(values) ~= "table" then
+            return not CleveRoids.CheckSpellCast(target, "")
+        end
+        for _, v in values do
+            if CleveRoids.CheckSpellCast(target, v) then return false end
+        end
+        return true
     end,
 
     zone = function(conditionals)
         local zone = GetRealZoneText()
         local sub_zone = GetSubZoneText()
-        return Or(conditionals.zone, function (v)
-            return (sub_zone ~= "" and (v == sub_zone) or (v == zone))
-        end)
+        local values = conditionals.zone
+        if type(values) ~= "table" then
+            return (sub_zone ~= "" and (values == sub_zone) or (values == zone))
+        end
+        for _, v in values do
+            if (sub_zone ~= "" and (v == sub_zone) or (v == zone)) then return true end
+        end
+        return false
     end,
 
     nozone = function(conditionals)
         local zone = GetRealZoneText()
         local sub_zone = GetSubZoneText()
-        return And(conditionals.nozone, function (v)
-            return not ((sub_zone ~= "" and v == sub_zone)) or (v == zone)
-        end)
+        local values = conditionals.nozone
+        if type(values) ~= "table" then
+            return not ((sub_zone ~= "" and values == sub_zone) or (values == zone))
+        end
+        for _, v in values do
+            if (sub_zone ~= "" and v == sub_zone) or (v == zone) then return false end
+        end
+        return true
     end,
 
     equipped = function(conditionals)
-        return Or(conditionals.equipped, function (v)
-            return (CleveRoids.HasWeaponEquipped(v) or CleveRoids.HasGearEquipped(v))
-        end)
+        local values = conditionals.equipped
+        if type(values) ~= "table" then
+            return CleveRoids.HasWeaponEquipped(values) or CleveRoids.HasGearEquipped(values)
+        end
+        for _, v in values do
+            if CleveRoids.HasWeaponEquipped(v) or CleveRoids.HasGearEquipped(v) then return true end
+        end
+        return false
     end,
 
     noequipped = function(conditionals)
-        return And(conditionals.noequipped, function (v)
-            return not (CleveRoids.HasWeaponEquipped(v) or CleveRoids.HasGearEquipped(v))
-        end)
+        local values = conditionals.noequipped
+        if type(values) ~= "table" then
+            return not (CleveRoids.HasWeaponEquipped(values) or CleveRoids.HasGearEquipped(values))
+        end
+        for _, v in values do
+            if CleveRoids.HasWeaponEquipped(v) or CleveRoids.HasGearEquipped(v) then return false end
+        end
+        return true
     end,
 
     dead = function(conditionals)
@@ -677,23 +721,40 @@ CleveRoids.Keywords = {
     end,
 
     reactive = function(conditionals)
-        return Or(conditionals.reactive, function (v)
-            return CleveRoids.IsReactiveUsable(v)
-        end)
+        local values = conditionals.reactive
+        if type(values) ~= "table" then
+            return CleveRoids.IsReactiveUsable(values)
+        end
+        for _, v in values do
+            if CleveRoids.IsReactiveUsable(v) then return true end
+        end
+        return false
     end,
 
     noreactive = function(conditionals)
-        return And(conditionals.noreactive,function (v)
-            return not CleveRoids.IsReactiveUsable(v)
-        end)
+        local values = conditionals.noreactive
+        if type(values) ~= "table" then
+            return not CleveRoids.IsReactiveUsable(values)
+        end
+        for _, v in values do
+            if CleveRoids.IsReactiveUsable(v) then return false end
+        end
+        return true
     end,
 
     member = function(conditionals)
-        return Or(conditionals.member, function(v)
-            return
-                CleveRoids.IsTargetInGroupType(conditionals.target, "party")
+        local values = conditionals.member
+        if type(values) ~= "table" then
+            return CleveRoids.IsTargetInGroupType(conditionals.target, "party")
                 or CleveRoids.IsTargetInGroupType(conditionals.target, "raid")
-        end)
+        end
+        for _, v in values do
+            if CleveRoids.IsTargetInGroupType(conditionals.target, "party")
+                or CleveRoids.IsTargetInGroupType(conditionals.target, "raid") then
+                return true
+            end
+        end
+        return false
     end,
 
     party = function(conditionals)
@@ -713,190 +774,340 @@ CleveRoids.Keywords = {
     end,
 
     group = function(conditionals)
-        if type(conditionals.group) ~= "table" then
-            conditionals.group = { "party", "raid" }
+        local values = conditionals.group
+        if type(values) ~= "table" then
+            values = { "party", "raid" }
         end
-        return Or(conditionals.group, function(groups)
-            if group == "party" then
-                return GetNumPartyMembers() > 0
-            elseif group == "raid" then
-                return GetNumRaidMembers() > 0
+        for _, groupType in values do
+            if groupType == "party" then
+                if GetNumPartyMembers() > 0 then return true end
+            elseif groupType == "raid" then
+                if GetNumRaidMembers() > 0 then return true end
             end
-        end)
+        end
+        return false
     end,
 
     checkchanneled = function(conditionals)
-        return Or(conditionals.checkchanneled, function(channeledSpells)
-            return CleveRoids.CheckChanneled(channeledSpells)
-        end)
+        local values = conditionals.checkchanneled
+        if type(values) ~= "table" then
+            return CleveRoids.CheckChanneled(values)
+        end
+        for _, channeledSpells in values do
+            if CleveRoids.CheckChanneled(channeledSpells) then return true end
+        end
+        return false
     end,
 
     buff = function(conditionals)
-        return Or(conditionals.buff, function(v)
-            return CleveRoids.ValidateUnitBuff(conditionals.target, v)
-        end)
+        local values = conditionals.buff
+        if type(values) ~= "table" then
+            return CleveRoids.ValidateUnitBuff(conditionals.target, values)
+        end
+        for _, v in values do
+            if CleveRoids.ValidateUnitBuff(conditionals.target, v) then return true end
+        end
+        return false
     end,
 
     nobuff = function(conditionals)
-        return And(conditionals.nobuff, function(v)
-            return not CleveRoids.ValidateUnitBuff(conditionals.target, v)
-        end)
+        local values = conditionals.nobuff
+        if type(values) ~= "table" then
+            return not CleveRoids.ValidateUnitBuff(conditionals.target, values)
+        end
+        for _, v in values do
+            if CleveRoids.ValidateUnitBuff(conditionals.target, v) then return false end
+        end
+        return true
     end,
 
     debuff = function(conditionals)
-        return Or(conditionals.debuff, function(v)
-            return CleveRoids.ValidateUnitDebuff(conditionals.target, v)
-        end)
+        local values = conditionals.debuff
+        if type(values) ~= "table" then
+            return CleveRoids.ValidateUnitDebuff(conditionals.target, values)
+        end
+        for _, v in values do
+            if CleveRoids.ValidateUnitDebuff(conditionals.target, v) then return true end
+        end
+        return false
     end,
 
     nodebuff = function(conditionals)
-        return And(conditionals.nodebuff, function(v)
-            return not CleveRoids.ValidateUnitDebuff(conditionals.target, v)
-        end)
+        local values = conditionals.nodebuff
+        if type(values) ~= "table" then
+            return not CleveRoids.ValidateUnitDebuff(conditionals.target, values)
+        end
+        for _, v in values do
+            if CleveRoids.ValidateUnitDebuff(conditionals.target, v) then return false end
+        end
+        return true
     end,
 
     mybuff = function(conditionals)
-        return Or(conditionals.mybuff, function(v)
-            return CleveRoids.ValidatePlayerBuff(v)
-        end)
+        local values = conditionals.mybuff
+        if type(values) ~= "table" then
+            return CleveRoids.ValidatePlayerBuff(values)
+        end
+        for _, v in values do
+            if CleveRoids.ValidatePlayerBuff(v) then return true end
+        end
+        return false
     end,
 
     nomybuff = function(conditionals)
-        return And(conditionals.nomybuff, function(v)
-            return not CleveRoids.ValidatePlayerBuff(v)
-        end)
+        local values = conditionals.nomybuff
+        if type(values) ~= "table" then
+            return not CleveRoids.ValidatePlayerBuff(values)
+        end
+        for _, v in values do
+            if CleveRoids.ValidatePlayerBuff(v) then return false end
+        end
+        return true
     end,
 
     mydebuff = function(conditionals)
-        return Or(conditionals.mydebuff, function(v)
-            return CleveRoids.ValidatePlayerDebuff(v)
-        end)
+        local values = conditionals.mydebuff
+        if type(values) ~= "table" then
+            return CleveRoids.ValidatePlayerDebuff(values)
+        end
+        for _, v in values do
+            if CleveRoids.ValidatePlayerDebuff(v) then return true end
+        end
+        return false
     end,
 
     nomydebuff = function(conditionals)
-        return And(conditionals.nomydebuff, function(v)
-            return not CleveRoids.ValidatePlayerDebuff(v)
-        end)
+        local values = conditionals.nomydebuff
+        if type(values) ~= "table" then
+            return not CleveRoids.ValidatePlayerDebuff(values)
+        end
+        for _, v in values do
+            if CleveRoids.ValidatePlayerDebuff(v) then return false end
+        end
+        return true
     end,
 
     power = function(conditionals)
-        return And(conditionals.power, function(args)
+        local values = conditionals.power
+        if type(values) ~= "table" then return false end
+        -- Check if single value (has .operator) vs array of values
+        if values.operator then
+            return CleveRoids.ValidatePower(conditionals.target, values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidatePower(conditionals.target, args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidatePower(conditionals.target, args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     mypower = function(conditionals)
-        return And(conditionals.mypower, function(args)
+        local values = conditionals.mypower
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidatePower("player", values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidatePower("player", args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidatePower("player", args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     rawpower = function(conditionals)
-        return And(conditionals.rawpower, function(args)
+        local values = conditionals.rawpower
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateRawPower(conditionals.target, values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidateRawPower(conditionals.target, args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidateRawPower(conditionals.target, args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     myrawpower = function(conditionals)
-        return And(conditionals.myrawpower, function(args)
+        local values = conditionals.myrawpower
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateRawPower("player", values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidateRawPower("player", args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidateRawPower("player", args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     powerlost = function(conditionals)
-        return And(conditionals.powerlost, function(args)
+        local values = conditionals.powerlost
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidatePowerLost(conditionals.target, values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidatePowerLost(conditionals.target, args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidatePowerLost(conditionals.target, args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     mypowerlost = function(conditionals)
-        return And(conditionals.mypowerlost, function(args)
+        local values = conditionals.mypowerlost
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidatePowerLost("player", values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidatePowerLost("player", args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidatePowerLost("player", args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     hp = function(conditionals)
-        return And(conditionals.hp, function(args)
+        local values = conditionals.hp
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateHp(conditionals.target, values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidateHp(conditionals.target, args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidateHp(conditionals.target, args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     myhp = function(conditionals)
-        return And(conditionals.myhp, function(args)
+        local values = conditionals.myhp
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateHp("player", values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidateHp("player", args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidateHp("player", args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     rawhp = function(conditionals)
-        return And(conditionals.rawphp, function(args)
+        local values = conditionals.rawhp
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateRawHp(conditionals.target, values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidateRawHp(conditionals.target, args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidateRawHp(conditionals.target, args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     myrawhp = function(conditionals)
-        return And(conditionals.myrawhp, function(args)
+        local values = conditionals.myrawhp
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateRawHp("player", values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidateRawHp("player", args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidateRawHp("player", args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     hplost = function(conditionals)
-        return And(conditionals.hplost, function(args)
+        local values = conditionals.hplost
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateHpLost(conditionals.target, values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidateHpLost(conditionals.target, args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidateHpLost(conditionals.target, args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     myhplost = function(conditionals)
-        return And(conditionals.myhplost, function(args)
+        local values = conditionals.myhplost
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateHpLost("player", values.operator, values.amount)
+        end
+        for _, args in values do
             if type(args) ~= "table" then return false end
-            return CleveRoids.ValidateHpLost("player", args.operator, args.amount)
-        end)
+            if not CleveRoids.ValidateHpLost("player", args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     type = function(conditionals)
-        return Or(conditionals.type, function(unittype)
-            return CleveRoids.ValidateCreatureType(unittype, conditionals.target)
-        end)
+        local values = conditionals.type
+        if type(values) ~= "table" then
+            return CleveRoids.ValidateCreatureType(values, conditionals.target)
+        end
+        for _, unittype in values do
+            if CleveRoids.ValidateCreatureType(unittype, conditionals.target) then return true end
+        end
+        return false
     end,
 
     notype = function(conditionals)
-        return And(conditionals.type, function(unittype)
-            return not CleveRoids.ValidateCreatureType(unittype, conditionals.target)
-        end)
+        local values = conditionals.notype
+        if type(values) ~= "table" then
+            return not CleveRoids.ValidateCreatureType(values, conditionals.target)
+        end
+        for _, unittype in values do
+            if CleveRoids.ValidateCreatureType(unittype, conditionals.target) then return false end
+        end
+        return true
     end,
 
     cooldown = function(conditionals)
-        return Or(conditionals.cooldown,function (v)
-            return CleveRoids.ValidateCooldown(v, true)
-        end)
+        local values = conditionals.cooldown
+        if type(values) ~= "table" then
+            return CleveRoids.ValidateCooldown(values, true)
+        end
+        for _, v in values do
+            if CleveRoids.ValidateCooldown(v, true) then return true end
+        end
+        return false
     end,
 
     nocooldown = function(conditionals)
-        return And(conditionals.nocooldown,function (v)
-            return not CleveRoids.ValidateCooldown(v, true)
-        end)
+        local values = conditionals.nocooldown
+        if type(values) ~= "table" then
+            return not CleveRoids.ValidateCooldown(values, true)
+        end
+        for _, v in values do
+            if CleveRoids.ValidateCooldown(v, true) then return false end
+        end
+        return true
     end,
 
     cdgcd = function(conditionals)
-        return Or(conditionals.cdgcd,function (v)
-            return CleveRoids.ValidateCooldown(v, false)
-        end)
+        local values = conditionals.cdgcd
+        if type(values) ~= "table" then
+            return CleveRoids.ValidateCooldown(values, false)
+        end
+        for _, v in values do
+            if CleveRoids.ValidateCooldown(v, false) then return true end
+        end
+        return false
     end,
 
     nocdgcd = function(conditionals)
-        return And(conditionals.nocdgcd,function (v)
-            return not CleveRoids.ValidateCooldown(v, false)
-        end)
+        local values = conditionals.nocdgcd
+        if type(values) ~= "table" then
+            return not CleveRoids.ValidateCooldown(values, false)
+        end
+        for _, v in values do
+            if CleveRoids.ValidateCooldown(v, false) then return false end
+        end
+        return true
     end,
 
     channeled = function(conditionals)
@@ -908,15 +1119,25 @@ CleveRoids.Keywords = {
     end,
 
     targeting = function(conditionals)
-        return And(conditionals.targeting, function (unit)
-            return (UnitIsUnit("targettarget", unit) == 1)
-        end)
+        local values = conditionals.targeting
+        if type(values) ~= "table" then
+            return (UnitIsUnit("targettarget", values) == 1)
+        end
+        for _, unit in values do
+            if not (UnitIsUnit("targettarget", unit) == 1) then return false end
+        end
+        return true
     end,
 
     notargeting = function(conditionals)
-        return And(conditionals.notargeting, function (unit)
-            return UnitIsUnit("targettarget", unit) ~= 1
-        end)
+        local values = conditionals.notargeting
+        if type(values) ~= "table" then
+            return UnitIsUnit("targettarget", values) ~= 1
+        end
+        for _, unit in values do
+            if UnitIsUnit("targettarget", unit) == 1 then return false end
+        end
+        return true
     end,
 
     isplayer = function(conditionals)
@@ -929,40 +1150,80 @@ CleveRoids.Keywords = {
 
     inrange = function(conditionals)
         if not IsSpellInRange then return end
-        return Or(conditionals.inrange, function(spellName)
-            return IsSpellInRange(spellName or conditionals.action, conditionals.target) == 1
-        end)
+        local values = conditionals.inrange
+        if type(values) ~= "table" then
+            return IsSpellInRange(values or conditionals.action, conditionals.target) == 1
+        end
+        for _, spellName in values do
+            if IsSpellInRange(spellName or conditionals.action, conditionals.target) == 1 then return true end
+        end
+        return false
     end,
 
     noinrange = function(conditionals)
         if not IsSpellInRange then return end
-        return And(conditionals.inrange, function(spellName)
-            return IsSpellInRange(spellName or conditionals.action, conditionals.target) == 0
-        end)
+        local values = conditionals.noinrange
+        if type(values) ~= "table" then
+            return IsSpellInRange(values or conditionals.action, conditionals.target) == 0
+        end
+        for _, spellName in values do
+            if IsSpellInRange(spellName or conditionals.action, conditionals.target) ~= 0 then return false end
+        end
+        return true
     end,
 
     combo = function(conditionals)
-        return Or(conditionals.combo, function(args)
-            return CleveRoids.ValidateComboPoints(args.operator, args.amount)
-        end)
+        local values = conditionals.combo
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return CleveRoids.ValidateComboPoints(values.operator, values.amount)
+        end
+        for _, args in values do
+            if CleveRoids.ValidateComboPoints(args.operator, args.amount) then return true end
+        end
+        return false
     end,
 
     nocombo = function(conditionals)
-        return And(conditionals.nocombo, function(args)
-            return CleveRoids.ValidateComboPoints(args.operator, args.amount)
-        end)
+        local values = conditionals.nocombo
+        if type(values) ~= "table" then return false end
+        if values.operator then
+            return not CleveRoids.ValidateComboPoints(values.operator, values.amount)
+        end
+        for _, args in values do
+            if CleveRoids.ValidateComboPoints(args.operator, args.amount) then return false end
+        end
+        return true
     end,
 
     known = function(conditionals)
-        return Or(conditionals.known, function(args)
-            return CleveRoids.ValidateKnown(args)
-        end)
+        local values = conditionals.known
+        if type(values) ~= "table" then
+            return CleveRoids.ValidateKnown(values)
+        end
+        -- Check if single value (has .name or is a string) vs array of values
+        if values.name or values.operator then
+            return CleveRoids.ValidateKnown(values)
+        end
+        for _, args in values do
+            if CleveRoids.ValidateKnown(args) then return true end
+        end
+        return false
     end,
 
     noknown = function(conditionals)
-        return And(conditionals.noknown, function(args)
-            return not CleveRoids.ValidateKnown(args)
-        end)
+        local values = conditionals.noknown
+        if type(values) ~= "table" then
+            return not CleveRoids.ValidateKnown(values)
+        end
+        -- Check if single value (has .name or is a string) vs array of values
+        if values.name or values.operator then
+            return not CleveRoids.ValidateKnown(values)
+        end
+        for _, args in values do
+            if CleveRoids.ValidateKnown(args) then return false end
+        end
+        return true
     end,
 
     resting = function()
