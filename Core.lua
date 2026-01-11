@@ -1020,20 +1020,25 @@ function CleveRoids.OnUpdate(self)
     end
 
     local sequences = CleveRoids.Sequences
-    for _, sequence in pairs(CleveRoids.Sequences) do
+    local seq_key, sequence = next(CleveRoids.Sequences)
+    while seq_key do
         if sequence.index > 1 and sequence.reset.secs then
             if (time - sequence.lastUpdate) >= sequence.reset.secs then
                 CleveRoids.ResetSequence(sequence)
             end
         end
         sequence.active = CleveRoids.TestAction(sequence.cmd, sequence.args)
+        seq_key, sequence = next(CleveRoids.Sequences, seq_key)
     end
 
     local spell_tracking = CleveRoids.spell_tracking
-    for guid, cast in pairs(spell_tracking) do
+    local guid, cast = next(spell_tracking)
+    while guid do
+        local next_guid = next(spell_tracking, guid)  -- Get next before potentially removing current
         if time > cast.expires then
             CleveRoids.spell_tracking[guid] = nil
         end
+        guid, cast = next_guid, next_guid and spell_tracking[next_guid]
     end
 
     -- Update active actions for all CleveRoids macros (handles mod keys, buffs, combat, etc.)

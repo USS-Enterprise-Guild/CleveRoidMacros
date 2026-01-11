@@ -39,6 +39,7 @@ function CleveRoids.IndexSpells()
                     texture = texture,
                     cost = cost,
                     reagent = reagent,
+                    nameWithRank = spellName,
                 }
             end
             if spellRank and not spells[bookType][spellName][spellRank] then
@@ -49,7 +50,8 @@ function CleveRoids.IndexSpells()
                     bookType = bookType,
                     texture = texture,
                     cost = cost,
-                    reagent = reagent
+                    reagent = reagent,
+                    nameWithRank = spellName .. "(" .. spellRank .. ")"
                 }
                 spells[bookType][spellName].highest = spells[bookType][spellName][spellRank]
             end
@@ -76,7 +78,12 @@ end
 
 
 function CleveRoids.IndexItems()
-    local items = {}
+    local items = CleveRoids.Items or {}
+    -- Clear existing entries
+    for k in items do
+        items[k] = nil
+    end
+
     for bagID = 0, NUM_BAG_SLOTS do
         for slot = GetContainerNumSlots(bagID), 1, -1 do
             local link = GetContainerItemLink(bagID, slot)
@@ -86,24 +93,25 @@ function CleveRoids.IndexItems()
 
                 if name then
                     local _, count = GetContainerItemInfo(bagID, slot)
-                    if not items[name] then
-                        items[name] = {
-                            bagID = bagID,
-                            slot = slot,
-                            id = itemID,
-                            name = name,
-                            type = itemType,
-                            count = count,
-                            texture = texture,
-                            link = link,
-                            bagSlots = {{bagID, slot}},
-                            slotsIndex = 1,
-                        }
-                        items[itemID] = name
-                    else
-                        items[name].count = (items[name].count or 0) + (count or 0)
-                        table.insert(items[name].bagSlots, {bagID, slot})
+                    local entry = items[name]
+                    if not entry then
+                        entry = {}
+                        items[name] = entry
                     end
+                    entry.bagID = bagID
+                    entry.slot = slot
+                    entry.id = itemID
+                    entry.name = name
+                    entry.type = itemType
+                    entry.count = count
+                    entry.texture = texture
+                    entry.link = link
+                    if not entry.bagSlots then
+                        entry.bagSlots = {}
+                        entry.slotsIndex = 1
+                    end
+                    table.insert(entry.bagSlots, {bagID, slot})
+                    items[itemID] = name
                 end
             end
         end
@@ -116,20 +124,18 @@ function CleveRoids.IndexItems()
             local name, link, _, _, itemType, itemSubType, _, _, texture = GetItemInfo(itemID)
             if name then
                 local count = GetInventoryItemCount("player", inventoryID)
-                if not items[name] then
-                    items[name] = {
-                        inventoryID = inventoryID,
-                        id = itemID,
-                        name = name,
-                        count = count,
-                        texture = texture,
-                        link = link,
-                    }
-                    items[itemID] = name
-                else
-                    items[name].inventoryID = inventoryID
-                    items[name].count = (items[name].count or 0) + (count or 0)
+                local entry = items[name]
+                if not entry then
+                    entry = {}
+                    items[name] = entry
                 end
+                entry.inventoryID = inventoryID
+                entry.id = itemID
+                entry.name = name
+                entry.count = count
+                entry.texture = texture
+                entry.link = link
+                items[itemID] = name
             end
         end
     end
@@ -163,7 +169,12 @@ function CleveRoids.IndexActionSlot(slot)
         local actionType, _, name, rank = CleveRoids.GetActionButtonInfo(slot)
         if name then
             local reactiveName = CleveRoids.reactiveSpells[name] and name
-            local actionSlotName = name..(rank and ("("..rank..")") or "")
+            -- Use cached nameWithRank from spell data if available
+            local spell = CleveRoids.Spells["SPELL"] and CleveRoids.Spells["SPELL"][name]
+            if spell and spell[rank or "highest"] then
+                spell = spell[rank or "highest"]
+            end
+            local actionSlotName = (spell and spell.nameWithRank) or (name..(rank and ("("..rank..")") or ""))
 
             if reactiveName then
                 if not CleveRoids.reactiveSlots[reactiveName] then
