@@ -205,22 +205,27 @@ function CleveRoids.ValidateKnown(args)
     if not args then return false end
     if table.getn(CleveRoids.Talents) == 0 then CleveRoids.IndexTalents() end
 
-    if type(args) ~= "table" then
-        args = { name = args }
+    local auraName, argOperator, argAmount
+    if type(args) == "table" then
+        auraName = args.name
+        argOperator = args.operator
+        argAmount = args.amount
+    else
+        auraName = args
     end
 
-    local spell, talent = CleveRoids.GetSpell(args.name), nil
+    local spell, talent = CleveRoids.GetSpell(auraName), nil
     if not spell then
-        talent = CleveRoids.GetTalent(args.name)
+        talent = CleveRoids.GetTalent(auraName)
     end
 
     if not spell and not talent then return false end
     local rank = spell and string.gsub(spell.rank, "Rank ", "") or talent
 
-    if rank and not args.amount and not args.operator then
+    if rank and not argAmount and not argOperator then
         return true
-    elseif args.amount and CleveRoids.operators[args.operator] then
-        return CleveRoids.comparators[args.operator](tonumber(rank), args.amount)
+    elseif argAmount and CleveRoids.operators[argOperator] then
+        return CleveRoids.comparators[argOperator](tonumber(rank), argAmount)
     else
         return false
     end
@@ -351,16 +356,22 @@ end
 -- TODO: Look into https://github.com/Stanzilla/WoWUIBugs/issues/47 if needed
 function CleveRoids.ValidateCooldown(args, ignoreGCD)
     if not args then return false end
-    if type(args) ~= "table" then
-        args = {name = args}
+
+    local auraName, argOperator, argAmount
+    if type(args) == "table" then
+        auraName = args.name
+        argOperator = args.operator
+        argAmount = args.amount
+    else
+        auraName = args
     end
 
-    local expires = CleveRoids.GetCooldown(args.name, ignoreGCD)
+    local expires = CleveRoids.GetCooldown(auraName, ignoreGCD)
 
-    if not args.operator and not args.amount then
+    if not argOperator and not argAmount then
         return expires > 0
-    elseif CleveRoids.operators[args.operator] then
-        return CleveRoids.comparators[args.operator](expires - GetTime(), args.amount)
+    elseif CleveRoids.operators[argOperator] then
+        return CleveRoids.comparators[argOperator](expires - GetTime(), argAmount)
     end
 end
 
@@ -379,8 +390,14 @@ end
 function CleveRoids.ValidateAura(unit, args, isbuff)
     if not args or not UnitExists(unit) then return false end
 
-    if type(args) ~= "table" then
-        args = {name = args}
+    local auraName, argOperator, argAmount, checkStacks
+    if type(args) == "table" then
+        auraName = args.name
+        argOperator = args.operator
+        argAmount = args.amount
+        checkStacks = args.checkStacks
+    else
+        auraName = args
     end
 
     local isPlayer = (unit == "player")
@@ -400,8 +417,8 @@ function CleveRoids.ValidateAura(unit, args, isbuff)
         end
 
         if (CleveRoids.hasSuperwow and not spellID) or not texture then break end
-        if (CleveRoids.hasSuperwow and args.name == SpellInfo(spellID))
-            or (not CleveRoids.hasSuperwow and texture == CleveRoids.auraTextures[args.name])
+        if (CleveRoids.hasSuperwow and auraName == SpellInfo(spellID))
+            or (not CleveRoids.hasSuperwow and texture == CleveRoids.auraTextures[auraName])
         then
             found = true
             break
@@ -411,12 +428,12 @@ function CleveRoids.ValidateAura(unit, args, isbuff)
     end
 
     local ops = CleveRoids.operators
-    if not args.amount and not args.operator and not args.checkStacks then
+    if not argAmount and not argOperator and not checkStacks then
         return found
-    elseif isPlayer and not args.checkStacks and args.amount and ops[args.operator] then
-        return CleveRoids.comparators[args.operator](remaining or -1, args.amount)
-    elseif args.amount and args.checkStacks and ops[args.operator] then
-        return CleveRoids.comparators[args.operator](stacks or -1, args.amount)
+    elseif isPlayer and not checkStacks and argAmount and ops[argOperator] then
+        return CleveRoids.comparators[argOperator](remaining or -1, argAmount)
+    elseif argAmount and checkStacks and ops[argOperator] then
+        return CleveRoids.comparators[argOperator](stacks or -1, argAmount)
     else
         return false
     end
