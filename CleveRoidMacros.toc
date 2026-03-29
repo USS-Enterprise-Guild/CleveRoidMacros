@@ -1,6 +1,6 @@
 ## Interface: 11200
 ## Author: Torio, Mewtiny, DWG, MarcelineVQ, _brain
-## Title: CleveRoidMacros, with memory optimizations!
+## Title: CleveRoidMacros, with memory optimizations! |cff00ffff[USS Enterprise Edition]|r
 ## Notes: Vanilla macros on steroids!
 ## Title-deDE: |cFF4477FFCleveR|r|cFFFFFFFFoidMac|r|cFF4477FFr|r|cFFFFFFFF os|r
 ## Notes-deDE: Vanilla Macros auf Steroide!
